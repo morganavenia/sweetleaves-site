@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<!-- saved from url=(0037)https://www.sweetleavesmn.com/rewards -->
+<html lang="en" data-tag-assistant-prod-present="pending:1779118050422"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Sweetleaves — North Loop Minneapolis</title>
+<link rel="icon" type="image/x-icon" href="https://www.sweetleavesmn.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({"gtm.start":new Date().getTime(),event:"gtm.js"});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src="https://www.googletagmanager.com/gtm.js?id="+i+dl;f.parentNode.insertBefore(j,f);})(window,document,"script","dataLayer","GTM-KPKJKT5G");</script>
+
+
+
+<!-- Sweetleaves Attribution & Tracking System -->
+<script>
+(function () {
+  "use strict";
+  var CONFIG = {
+    cookieDomain: ".sweetleavesmn.com",
+    storageKey: "sl_attr_v1",
+    vidKey: "sl_vid",
+    relayEndpoint: "/.netlify/functions/track",
+    dutchieMenuId: "65ae80f7dbecc7000934725c",
+    dutchieEmbedBase: "https://dutchie.com/api/v2/embedded-menu",
+    dutchieIframeBase: "https://dutchie.com/embedded-menu",
+    cookieMaxAge: 60 * 60 * 24 * 365,
+    sessionTimeoutMin: 30,
+    debug: false
+  };
+  var log = function() { if (CONFIG.debug) console.log.apply(console, ["[SLTrack]"].concat(Array.from(arguments))); };
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+      var r = (Math.random() * 16) | 0;
+      var v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+  function getCookie(name) {
+    var m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function setCookie(name, value, opts) {
+    opts = opts || {};
+    var parts = [name + "=" + encodeURIComponent(value)];
+    parts.push("max-age=" + (opts.maxAge || CONFIG.cookieMaxAge));
+    parts.push("path=/");
+    if (CONFIG.cookieDomain && location.hostname.endsWith(CONFIG.cookieDomain.replace(/^\./, ""))) {
+      parts.push("domain=" + CONFIG.cookieDomain);
+    }
+    parts.push("SameSite=Lax");
+    if (location.protocol === "https:") parts.push("Secure");
+    document.cookie = parts.join("; ");
+  }
+  function lsGet(key) { try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; } }
+  function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { log("lsSet failed", e); } }
+  function getOrCreateVid() {
+    var vid = localStorage.getItem(CONFIG.vidKey) || getCookie(CONFIG.vidKey);
+    if (!vid) { vid = uuid(); log("new vid", vid); }
+    try { localStorage.setItem(CONFIG.vidKey, vid); } catch(e) {}
+    setCookie(CONFIG.vidKey, vid);
+    return vid;
+  }
+  var TRACKED_PARAMS = ["utm_source","utm_medium","utm_campaign","utm_content","utm_term","gclid","gbraid","wbraid","fbclid","msclkid","ttclid","li_fat_id"];
+  function readUrlParams() {
+    var out = {};
+    var u = new URL(location.href);
+    TRACKED_PARAMS.forEach(function(p) { var v = u.searchParams.get(p); if (v) out[p] = v; });
+    return out;
+  }
+  function buildTouch() {
+    return {
+      ts: new Date().toISOString(),
+      params: readUrlParams(),
+      referrer: document.referrer || null,
+      landing_path: location.pathname + location.search,
+      device: { ua: navigator.userAgent, viewport: window.innerWidth + "x" + window.innerHeight, lang: navigator.language, platform: navigator.platform }
+    };
+  }
+  function isNewSession(env) {
+    if (!env || !env.last_touch) return true;
+    var last = new Date(env.last_touch.ts).getTime();
+    return (Date.now() - last) > CONFIG.sessionTimeoutMin * 60 * 1000;
+  }
+  function hasNewAttribution(touch) {
+    return Object.keys(touch.params).length > 0 || (touch.referrer && !touch.referrer.includes(location.hostname));
+  }
+  function getOrCreateEnvelope() {
+    var vid = getOrCreateVid();
+    var env = lsGet(CONFIG.storageKey);
+    var touch = buildTouch();
+    if (!env) {
+      env = { vid: vid, first_touch: touch, last_touch: touch, session_count: 1, event_count: 0 };
+      lsSet(CONFIG.storageKey, env);
+      return env;
+    }
+    var newSession = isNewSession(env);
+    if (newSession) env.session_count = (env.session_count || 1) + 1;
+    if (newSession || hasNewAttribution(touch)) env.last_touch = touch;
+    env.vid = vid;
+    lsSet(CONFIG.storageKey, env);
+    return env;
+  }
+  function attrParamsForDutchie() {
+    var env = getOrCreateEnvelope();
+    var lt = env.last_touch.params;
+    var params = {
+      utm_source: lt.utm_source || "direct",
+      utm_medium: lt.utm_medium || "none",
+      utm_campaign: lt.utm_campaign || "none",
+      utm_content: lt.utm_content || "",
+      utm_term: lt.utm_term || "",
+      sl_vid: env.vid
+    };
+    if (lt.gclid) params.gclid = lt.gclid;
+    if (lt.fbclid) params.fbclid = lt.fbclid;
+    if (lt.msclkid) params.msclkid = lt.msclkid;
+    return params;
+  }
+  function qs(obj) {
+    return Object.entries(obj).filter(function(kv) { return kv[1] !== "" && kv[1] != null; })
+      .map(function(kv) { return encodeURIComponent(kv[0]) + "=" + encodeURIComponent(kv[1]); }).join("&");
+  }
+  function buildEmbedUrl(menuId) {
+    return CONFIG.dutchieEmbedBase + "/" + (menuId || CONFIG.dutchieMenuId) + ".js?" + qs(attrParamsForDutchie());
+  }
+  function buildIframeSrc(menuId) {
+    return CONFIG.dutchieIframeBase + "/" + (menuId || CONFIG.dutchieMenuId) + "?" + qs(attrParamsForDutchie());
+  }
+  function track(eventName, payload) {
+    payload = payload || {};
+    var env = getOrCreateEnvelope();
+    env.event_count = (env.event_count || 0) + 1;
+    lsSet(CONFIG.storageKey, env);
+    var evt = {
+      event: eventName, ts: new Date().toISOString(), vid: env.vid,
+      session_count: env.session_count, first_touch: env.first_touch, last_touch: env.last_touch,
+      page: location.pathname + location.search, payload: payload
+    };
+    window.dataLayer = window.dataLayer || [];
+    var dlPush = {
+      event: eventName,
+      sl_vid: env.vid,
+      sl_first_source: env.first_touch.params.utm_source || "direct",
+      sl_last_source: env.last_touch.params.utm_source || "direct",
+      sl_session_count: env.session_count
+    };
+    Object.keys(payload).forEach(function(k) { dlPush[k] = payload[k]; });
+    window.dataLayer.push(dlPush);
+    try {
+      var body = JSON.stringify(evt);
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(CONFIG.relayEndpoint, new Blob([body], { type: "application/json" }));
+      } else {
+        fetch(CONFIG.relayEndpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: body, keepalive: true }).catch(function(){});
+      }
+    } catch (e) {}
+  }
+  function attachDutchieListener() {
+    var COMMERCIAL_EVENTS = /add.?to.?cart|addtocart|remove.?from.?cart|cart.?update|checkout.?start|begin.?checkout|purchase|order.?complete|view.?item|product.?view|search|age.?gate/i;
+    window.addEventListener("message", function(e) {
+      if (!e.origin || !e.origin.includes("dutchie.com")) return;
+      var data = e.data || {};
+      var type = data.type || data.event;
+      if (!type || typeof type !== "string") return;
+      if (!COMMERCIAL_EVENTS.test(type)) return;
+      track("dutchie_" + type.toLowerCase().replace(/[^a-z0-9_]/g, "_"), {
+        dutchie_type: type,
+        dutchie_payload: data
+      });
+    }, false);
+  }
+  var VARIANT = "rewards";
+  function init() {
+    getOrCreateEnvelope();
+    track("page_view", { title: document.title, variant: VARIANT });
+    attachDutchieListener();
+  }
+  window.SLTrack = {
+    vid: getOrCreateVid,
+    envelope: getOrCreateEnvelope,
+    attributionParams: attrParamsForDutchie,
+    queryString: qs,
+    buildEmbedUrl: buildEmbedUrl,
+    buildIframeSrc: buildIframeSrc,
+    track: track,
+    variant: VARIANT,
+    markAgeGatePass: function() { track("age_gate_pass", { variant: VARIANT }); },
+    markMenuClick: function() { track("menu_click", { variant: VARIANT }); },
+    markPhoneClick: function() { track("phone_click", { variant: VARIANT }); },
+    markDirectionsClick: function() { track("directions_click", { variant: VARIANT }); }
+  };
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+<style>
+:root {
+  --sky-blue: #d9f1fb;
+  --forest: #18342b;
+  --forest-med: #2d4b41;
+  --cream: #f5f1eb;
+  --paper: #fffdf8;
+  --gold: #f6ea77;
+  --gold-bright: #fff08a;
+  --orange: #f57a32;
+  --orange-soft: #ff8b4a;
+  --border-olive: #879188;
+  --dark: #2d2d2d;
+  --white: #ffffff;
+  --side: clamp(18px, 5vw, 80px);
+  --panel-radius: clamp(22px, 3vw, 32px);
+  --panel-pad: clamp(22px, 4vw, 48px);
+  --nav-h: 162px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; }
+body {
+  font-family: "Poppins", sans-serif;
+  background: var(--sky-blue) url("assets/circles-bg.svg") center top / 900px auto repeat;
+  color: var(--dark);
+  overflow-x: hidden;
+}
+
+.page { display: none; width: 100%; min-height: 100vh; }
+.page.active { display: block; }
+
+/* NAVIGATION */
+.top-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1001;
+  background: var(--forest); color: var(--white);
+  padding: clamp(7px, 1.5vw, 9px) 20px; text-align: center;
+  font-size: clamp(0.58rem, 1.5vw, 0.7rem); letter-spacing: 1px; text-transform: uppercase;
+  font-weight: 500;
+}
+.site-nav {
+  position: fixed; top: 36px; left: 16px; right: 16px; z-index: 1000;
+  background: var(--forest); min-height: 60px; border-radius: 100px;
+  display: grid; grid-template-columns: minmax(120px, 0.8fr) minmax(0, auto);
+  align-items: center; gap: clamp(10px, 2vw, 24px);
+  padding: 0 clamp(18px, 2.5vw, 32px);
+  box-shadow: 0 4px 20px rgba(15,45,37,0.15);
+}
+.nav-logo { flex: 0 1 auto; min-width: 0; }
+.nav-logo img { height: clamp(22px, 3vw, 32px); max-width: min(28vw, 190px); object-fit: contain; }
+.nav-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, max-content));
+  align-items: center;
+  justify-content: end;
+  gap: clamp(5px, 1vw, 10px);
+  min-width: 0;
+}
+.nav-cta {
+  background: var(--gold); color: var(--forest); border: none;
+  min-width: clamp(76px, 9vw, 148px);
+  padding: clamp(8px, 1.1vw, 11px) clamp(10px, 1.6vw, 22px); border-radius: 100px;
+  font-weight: 700; cursor: pointer; font-size: clamp(0.6rem, 1.15vw, 0.78rem);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  text-align: center;
+  transition: all 0.2s; white-space: nowrap;
+}
+.nav-cta-secondary {
+  background: rgba(255,255,255,0.08); color: var(--white);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: none;
+}
+.nav-cta-secondary:hover { background: rgba(255,255,255,0.14); color: var(--white); }
+.nav-cta-short { display: none; }
+@media (max-width: 720px) {
+  .nav-cta-full { display: none; }
+  .nav-cta-short { display: inline; }
+}
+.nav-cta:hover { background: var(--gold-bright); transform: translateY(-1px); }
+
+/* HERO */
+.hero {
+  margin-top: var(--nav-h);
+  min-height: min(760px, calc(100vh - var(--nav-h)));
+  display: flex; align-items: stretch;
+  background: transparent;
+}
+.hero-left {
+  flex: 0.85; display: flex; align-items: center;
+  padding: clamp(32px, 5vw, 56px) var(--side); background: transparent;
+}
+.hero-right {
+  flex: 1.15; position: relative; overflow: hidden; background: var(--cream);
+  min-height: clamp(420px, 48vw, 600px); border-radius: var(--panel-radius);
+  margin: clamp(20px, 3vw, 32px) clamp(18px, 3vw, 32px) clamp(20px, 3vw, 32px) 0;
+  border: 2px solid rgba(135,145,136,0.55);
+}
+.hero-content { max-width: min(560px, 100%); }
+.award-badge {
+  width: clamp(90px, 12vw, 140px); height: auto; display: block; margin-bottom: clamp(16px, 2vw, 24px);
+}
+.section-eyebrow-orange {
+  font-size: 1.6rem; font-weight: 700; color: var(--orange);
+  margin-bottom: 24px; line-height: 1.2;
+  font-family: "Poppins", sans-serif;
+}
+.hero-eyebrow {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px;
+  color: rgba(45,45,45,0.6); margin-bottom: 12px;
+}
+.hero-logo { margin-bottom: 16px; }
+.hero-logo img,
+.hero-logo img[style] { height: clamp(38px, 5vw, 48px) !important; display: block; }
+.hero-sublabel {
+  font-size: clamp(2rem, 4.2vw, 3.4rem); font-weight: 700;
+  margin-bottom: 18px; color: var(--orange);
+  font-family: "Poppins", sans-serif;
+  line-height: 1.04; letter-spacing: 0;
+}
+.nowrap { white-space: nowrap; }
+.hero-tagline {
+  font-size: clamp(0.92rem, 1.2vw, 1rem); line-height: 1.7;
+  color: rgba(45,45,45,0.68); margin-bottom: 24px;
+  max-width: 500px;
+}
+.hero-actions {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  margin-bottom: 24px;
+}
+.btn-primary {
+  background: var(--gold); color: var(--forest); border: none;
+  padding: clamp(14px, 1.6vw, 18px) clamp(24px, 3vw, 40px); border-radius: 100px;
+  font-weight: 700; font-size: clamp(0.8rem, 1.2vw, 0.95rem); cursor: pointer;
+  text-transform: uppercase; letter-spacing: 1px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(232,208,74,0.35);
+}
+.btn-secondary {
+  background: var(--white); color: var(--forest);
+  border: 2px solid rgba(15,45,37,0.18);
+  box-shadow: none;
+}
+.btn-primary:hover {
+  transform: translateY(-2px); background: var(--gold-bright);
+  box-shadow: 0 6px 20px rgba(232,208,74,0.4);
+}
+.btn-secondary:hover {
+  background: var(--forest); color: var(--white);
+  box-shadow: 0 6px 20px rgba(15,45,37,0.16);
+}
+.hero-proof {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+  max-width: 520px;
+}
+.hero-proof-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+.hero-proof-kicker {
+  display: inline; color: var(--forest); font-size: 0.72rem;
+  font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 0;
+}
+.hero-proof-copy {
+  display: inline; color: rgba(15,45,37,0.72);
+  font-size: 0.78rem; line-height: 1.35;
+}
+.compliance-note {
+  margin-top: 18px; color: rgba(45,45,45,0.56);
+  font-size: 0.72rem; line-height: 1.55; max-width: 520px;
+}
+/* Age-gate step states */
+.ag-step { display: none; }
+.ag-step.active { display: block; }
+.ag-fineprint {
+  margin-top: 16px; font-size: 0.72rem; color: rgba(45,45,45,0.55);
+  line-height: 1.55;
+}
+.ag-secondary {
+  background: var(--white); color: var(--forest);
+  border: 2px solid var(--forest);
+  padding: 16px; border-radius: 100px;
+  font-weight: 700; text-transform: uppercase;
+  cursor: pointer; transition: all 0.2s; font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+.ag-secondary:hover {
+  background: var(--forest); color: var(--white);
+  transform: translateY(-2px);
+}
+
+/* AIQ iframe modal */
+.aiq-modal {
+  display: none; position: fixed; inset: 0; z-index: 2000;
+  background: rgba(15,45,37,0.7);
+  align-items: center; justify-content: center;
+  padding: 16px;
+}
+.aiq-modal.active { display: flex; }
+.aiq-modal-inner {
+  background: var(--white); border-radius: 24px;
+  width: 100%; max-width: 540px; height: 720px;
+  max-height: calc(100vh - 32px);
+  position: relative; overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+}
+.aiq-modal-close {
+  position: absolute; top: 12px; right: 12px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.95); border: none;
+  font-size: 1.3rem; line-height: 1; cursor: pointer; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--dark); box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  transition: transform 0.15s;
+}
+.aiq-modal-close:hover { transform: scale(1.08); }
+#aiq-iframe {
+  width: 100%; height: 100%; border: none; display: block;
+}
+.aiq-loading {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cream); color: rgba(45,45,45,0.55);
+  font-size: 0.85rem; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.aiq-modal.loaded .aiq-loading { opacity: 0; }
+.hero-img {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+}
+
+/* SCROLLING BRAND STRIP */
+.brand-strip {
+  position: fixed; top: 108px; left: 0; right: 0; z-index: 999;
+  background: var(--forest);
+  padding: 10px 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.brand-strip::before,
+.brand-strip::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 80px;
+  z-index: 2;
+  pointer-events: none;
+}
+.brand-strip::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--forest) 0%, transparent 100%);
+}
+.brand-strip::after {
+  right: 0;
+  background: linear-gradient(270deg, var(--forest) 0%, transparent 100%);
+}
+.brand-track {
+  display: flex;
+  width: max-content;
+  animation: scroll-left 38s linear infinite;
+}
+.brand-track:hover { animation-play-state: paused; }
+.brand-item {
+  display: flex; align-items: center; gap: 40px;
+  padding: 0 28px; white-space: nowrap;
+}
+.brand-name {
+  color: var(--white); font-size: 0.95rem; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  opacity: 0.85; transition: opacity 0.2s, color 0.2s;
+}
+.brand-name:hover { opacity: 1; color: var(--gold); }
+.brand-divider {
+  width: 13px;
+  height: 19px;
+  display: inline-block;
+  flex: 0 0 13px;
+  background: var(--gold);
+  opacity: 0.86;
+  mask: url("assets/sweetleaves-leaf-darkgreen.svg") center / contain no-repeat;
+  -webkit-mask: url("assets/sweetleaves-leaf-darkgreen.svg") center / contain no-repeat;
+}
+.brand-prefix {
+  color: var(--gold); font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase; padding-right: 8px;
+}
+@keyframes scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* GARDEN CLUB REWARDS */
+.section-quick {
+  padding: clamp(24px, 4vw, 32px) var(--side) 18px;
+  background: transparent;
+}
+.quick-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 20px;
+  align-items: stretch;
+}
+.quick-panel {
+  background: var(--cream);
+  border: 2px solid rgba(135,145,136,0.5);
+  border-radius: var(--panel-radius);
+  padding: clamp(22px, 3vw, 28px);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px;
+}
+.quick-panel-featured {
+  background: var(--paper); color: var(--forest);
+  border-color: rgba(135,145,136,0.5);
+}
+.quick-eyebrow {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 2px;
+  font-weight: 800; color: var(--orange); margin-bottom: 8px;
+}
+.quick-panel-featured .quick-eyebrow { color: var(--orange); }
+.quick-title {
+  font-family: "Poppins", sans-serif;
+  font-size: clamp(1.12rem, 2vw, 1.45rem); line-height: 1.14; color: var(--forest);
+  margin-bottom: 8px; font-weight: 600;
+}
+.quick-panel-featured .quick-title { color: var(--forest); }
+.quick-copy {
+  color: rgba(15,45,37,0.68); line-height: 1.55; font-size: clamp(0.84rem, 1.1vw, 0.9rem);
+}
+.quick-panel-featured .quick-copy { color: rgba(15,45,37,0.68); }
+.quick-button {
+  flex: 0 0 auto;
+  border: none; cursor: pointer;
+  border-radius: 100px; padding: clamp(12px, 1.5vw, 14px) clamp(18px, 2vw, 24px);
+  font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--forest); background: var(--gold);
+  white-space: nowrap;
+}
+.quick-button.alt {
+  background: var(--orange); color: var(--white);
+}
+.quick-panel-featured .quick-button:hover,
+.quick-button:hover { transform: translateY(-2px); }
+.section-club {
+  padding: clamp(40px, 5vw, 56px) var(--side) clamp(44px, 6vw, 64px);
+  background: transparent;
+  scroll-margin-top: var(--nav-h);
+}
+.club-inner {
+  max-width: 1100px; margin: 0 auto;
+}
+.club-pill {
+  background: var(--forest);
+  border: 2px solid rgba(135,145,136,0.55);
+  border-radius: var(--panel-radius);
+  padding: var(--panel-pad);
+  text-align: center;
+  margin-bottom: 28px;
+  box-shadow: none;
+}
+.club-pill-gardenclub {
+  width: clamp(220px, 42vw, 380px); max-width: 86%; height: auto;
+  margin: 0 auto 16px; display: block;
+}
+.club-pill-h2 {
+  font-family: "Poppins", sans-serif;
+  font-size: clamp(1.45rem, 3vw, 2.2rem); font-weight: 600;
+  color: var(--white); margin-bottom: 12px;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+.club-pill-copy {
+  color: rgba(255,255,255,0.78);
+  max-width: 620px; margin: 0 auto 24px;
+  line-height: 1.65; font-size: clamp(0.86rem, 1.2vw, 0.95rem);
+}
+.club-actions {
+  display: flex; justify-content: center; flex-wrap: wrap; gap: 12px;
+}
+.club-cta {
+  background: var(--gold); color: var(--forest); border: none;
+  padding: clamp(12px, 1.5vw, 14px) clamp(20px, 2.5vw, 32px); border-radius: 100px;
+  font-weight: 700; font-size: clamp(0.72rem, 1.1vw, 0.8rem);
+  text-transform: uppercase; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.2s;
+  font-family: "Poppins", sans-serif;
+  box-shadow: 0 4px 16px rgba(232,208,74,0.3);
+}
+.club-cta-secondary {
+  background: rgba(255,255,255,0.08); color: var(--white);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: none;
+}
+.club-cta-secondary:hover { background: rgba(255,255,255,0.14); color: var(--white); }
+.club-cta:hover { background: var(--gold-bright); transform: translateY(-2px); }
+
+/* Rewards summary */
+.club-summary {
+  background: var(--paper);
+  border: 2px solid rgba(135,145,136,0.45);
+  border-radius: var(--panel-radius);
+  padding: clamp(18px, 2.5vw, 24px);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: center;
+}
+.club-points {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.club-point {
+  background: var(--white);
+  border: 1px solid rgba(135,145,136,0.35);
+  border-radius: clamp(18px, 3vw, 999px);
+  padding: clamp(14px, 2vw, 16px);
+}
+.club-point strong {
+  display: block;
+  color: var(--forest);
+  font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+  margin-bottom: 4px;
+}
+.club-point span {
+  display: block;
+  color: rgba(15,45,37,0.68);
+  font-size: clamp(0.76rem, 1vw, 0.82rem);
+  line-height: 1.4;
+}
+.club-perks-compact {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 470px);
+  justify-self: end;
+}
+.club-perks-compact span {
+  background: var(--gold);
+  color: var(--forest);
+  border-radius: 100px;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* HOW IT WORKS */
+.section-how { padding: clamp(28px, 4vw, 32px) var(--side) clamp(44px, 6vw, 56px); background: transparent; }
+.how-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+}
+.how-step {
+  text-align: center; padding: clamp(24px, 3vw, 32px) clamp(18px, 2.5vw, 24px);
+  border-radius: var(--panel-radius); background: var(--paper);
+  border: 2px solid rgba(135,145,136,0.45);
+  transition: all 0.3s;
+}
+.how-step:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+.how-num {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--orange); margin-bottom: 12px; font-weight: 800;
+}
+.how-title {
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem); font-weight: 700; margin-bottom: 12px; color: var(--forest);
+}
+.how-body {
+  font-size: clamp(0.84rem, 1.1vw, 0.9rem); line-height: 1.7; color: rgba(15,45,37,0.68);
+}
+
+/* LOCATION */
+.section-location {
+  padding: 24px var(--side) 64px; background: transparent;
+}
+.section-location-inner {
+  background: var(--cream); color: var(--forest);
+  border: 2px solid rgba(135,145,136,0.5);
+  border-radius: var(--panel-radius); padding: var(--panel-pad);
+  box-shadow: none;
+}
+.location-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+}
+.loc-col { padding: clamp(20px, 3vw, 28px); background: var(--white); border-radius: clamp(18px, 2.5vw, 24px); }
+.loc-eyebrow {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--orange); margin-bottom: 16px; font-weight: 800;
+}
+.loc-title {
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem); font-weight: 700; margin-bottom: 16px; color: var(--forest);
+}
+.loc-body { font-size: clamp(0.84rem, 1.1vw, 0.9rem); line-height: 1.7; color: rgba(15,45,37,0.7); }
+.hours-row {
+  display: flex; justify-content: space-between;
+  margin-bottom: 12px; color: rgba(15,45,37,0.78); font-size: 0.9rem;
+}
+.loc-title a { color: inherit; text-decoration: none; }
+.loc-title a:hover { color: var(--orange); }
+
+/* AGE GATE */
+#page-agegate {
+  display: none; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 24px; background: var(--sky-blue);
+}
+#page-agegate.active { display: flex; }
+.ag-card {
+  background: var(--white); border-radius: 32px;
+  padding: 56px 44px; max-width: 520px; width: 100%;
+  text-align: center; box-shadow: 0 16px 56px rgba(15,45,37,0.15);
+}
+.ag-badge {
+  width: 140px; height: auto; margin: 0 auto 24px; display: block;
+}
+.ag-club-blurb {
+  background: var(--forest); color: var(--white);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin: 0 auto 24px;
+  display: flex; align-items: center; gap: 12px;
+  text-align: left;
+}
+.ag-club-blurb-icon {
+  flex: 0 0 32px; width: 32px; height: 32px;
+  border-radius: 50%; background: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--forest);
+}
+.ag-club-blurb-text {
+  font-size: 0.78rem; line-height: 1.4;
+  color: rgba(255,255,255,0.9);
+}
+.ag-club-blurb-text strong {
+  color: var(--gold); font-weight: 700;
+  display: block; font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+.ag-h1 {
+  font-size: 1.8rem; font-weight: 700; font-style: italic;
+  margin-bottom: 20px; color: var(--dark);
+}
+.ag-desc {
+  font-size: 0.95rem; line-height: 1.6;
+  color: rgba(45,45,45,0.6); margin-bottom: 24px;
+}
+.ag-btns { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+.ag-yes {
+  background: var(--gold); color: var(--forest); border: none;
+  padding: 18px; border-radius: 100px;
+  font-weight: 700; text-transform: uppercase;
+  cursor: pointer; transition: all 0.2s; font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 16px rgba(232,208,74,0.35);
+}
+.ag-yes:hover { background: var(--gold-bright); transform: translateY(-2px); }
+.ag-no {
+  background: transparent; color: rgba(45,45,45,0.6); border: none;
+  cursor: pointer; margin-top: 12px; font-size: 0.8rem;
+  text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+}
+.ag-denied {
+  display: none; color: #c93232; margin-top: 20px;
+  font-size: 0.85rem; font-weight: 600;
+}
+
+/* MENU */
+#page-menu { display: none; width: 100%; min-height: 100vh; background: #fff; }
+#page-menu.active { display: block; }
+.menu-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--forest); height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--side);
+}
+.menu-back {
+  background: transparent; color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 8px 20px; border-radius: 100px;
+  cursor: pointer; font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+}
+.menu-back:hover { background: rgba(255,255,255,0.1); }
+.menu-embed { width: 100%; min-height: calc(100vh - 60px); }
+
+/* FOOTER */
+.footer {
+  text-align: center; padding: 32px 24px;
+  background: var(--forest); font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.footer p + p { margin-top: 8px; }
+.sticky-conversion {
+  display: none;
+  position: fixed; left: 12px; right: 12px; bottom: 12px;
+  z-index: 1100; background: var(--forest);
+  border-radius: 20px; padding: 10px;
+  box-shadow: 0 12px 40px rgba(15,45,37,0.28);
+  gap: 8px;
+}
+.sticky-conversion button {
+  flex: 1; border: none; border-radius: 14px; padding: 13px 10px;
+  font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+  cursor: pointer; font-size: 0.72rem;
+}
+.sticky-conversion .sticky-join { background: var(--gold); color: var(--forest); }
+.sticky-conversion .sticky-shop { background: rgba(255,255,255,0.1); color: var(--white); }
+
+/* RESPONSIVE */
+@media (max-width: 1180px) {
+  .hero-left { flex: 1; }
+  .hero-right { flex: 0.9; }
+  .club-summary { grid-template-columns: 1fr; }
+  .club-perks-compact {
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  :root { --nav-h: 178px; }
+  .site-nav {
+    left: 14px; right: 14px;
+    grid-template-columns: auto 1fr;
+    padding: 0 14px;
+  }
+  .nav-logo img,
+  .nav-logo img[style] {
+    height: 22px !important;
+    max-width: 132px;
+  }
+  .nav-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .nav-cta {
+    min-width: 0;
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+  .hero { flex-direction: column; min-height: auto; }
+  .hero-right {
+    height: clamp(300px, 45vw, 420px);
+    min-height: clamp(300px, 45vw, 420px);
+    width: auto;
+    margin: 0 var(--side) clamp(28px, 5vw, 40px);
+  }
+  .hero-left { padding: clamp(30px, 5vw, 44px) var(--side); }
+  .location-grid, .how-grid, .quick-inner {
+    grid-template-columns: 1fr; gap: 16px;
+  }
+  .quick-inner, .club-inner { max-width: 720px; }
+  .quick-panel { align-items: flex-start; flex-direction: column; }
+  .quick-button { width: auto; }
+  .section-location-inner { padding: 32px 24px; border-radius: 24px; }
+  .section-club { padding: clamp(36px, 6vw, 48px) var(--side) clamp(44px, 7vw, 56px); }
+  .how-step { text-align: left; }
+}
+@media (max-width: 640px) {
+  .brand-item { gap: 28px; padding: 0 20px; }
+  .brand-name { font-size: 0.8rem; letter-spacing: 1px; }
+  .brand-track { animation-duration: 28s; }
+}
+@media (max-width: 640px) {
+  .top-banner {
+    font-size: 0.6rem; padding: 8px 12px; letter-spacing: 0.5px;
+    line-height: 1.5;
+  }
+  .site-nav {
+    top: 48px; left: 10px; right: 10px; padding: 0 8px 0 10px;
+    grid-template-columns: auto 1fr;
+    height: 56px;
+  }
+  .nav-actions { gap: 4px; }
+  .nav-logo img,
+  .nav-logo img[style] { height: 19px !important; }
+  .nav-cta {
+    min-width: 0;
+    padding: 8px 6px; font-size: 0.58rem;
+    letter-spacing: 0.3px; white-space: nowrap;
+  }
+  :root { --nav-h: 196px; }
+  .brand-strip { top: 118px; padding: 8px 0; }
+  .hero-content { max-width: 100%; }
+  .hero-content .award-badge { width: 90px; }
+  .hero-logo img,
+  .hero-logo img[style] { height: 38px !important; }
+  .hero-sublabel { font-size: clamp(1.78rem, 9vw, 2.25rem); }
+  .hero-actions { flex-direction: column; }
+  .btn-primary { width: 100%; padding-left: 20px; padding-right: 20px; }
+  .quick-button { width: 100%; }
+  .club-pill { padding: 28px 20px; }
+  .club-actions { flex-direction: column; }
+  .club-cta { width: 100%; }
+  .club-summary { grid-template-columns: 1fr; padding: 18px; }
+  .club-points { grid-template-columns: 1fr; }
+  .club-perks-compact {
+    justify-self: stretch;
+    width: 100%;
+  }
+  .club-perks-compact span { white-space: normal; }
+  .section-quick, .section-how, .section-location {
+    padding-left: 20px; padding-right: 20px;
+  }
+  .section-location { padding-bottom: 96px; }
+  .sticky-conversion { display: flex; }
+}
+
+@media (max-width: 380px) {
+  .nowrap { white-space: normal; }
+  .site-nav {
+    left: 8px; right: 8px;
+    padding: 0 7px;
+  }
+  .nav-actions { gap: 3px; }
+  .nav-cta {
+    padding: 8px 5px;
+    font-size: 0.53rem;
+    letter-spacing: 0.2px;
+  }
+  .nav-logo img,
+  .nav-logo img[style] { height: 17px !important; }
+  .brand-strip { top: 116px; }
+}
+</style>
+</head>
+<body cz-shortcut-listen="true">
+
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KPKJKT5G" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<div id="page-landing" class="page active">
+  <div class="top-banner">Open Daily · Shop Online for In-Store or Curbside Pickup · North Loop Minneapolis</div>
+  <nav class="site-nav">
+    <div class="nav-logo">
+      <img src="assets/logo.png" alt="Sweetleaves" style="height:28px;width:auto;display:block">
+    </div>
+    <div class="nav-actions">
+      <button class="nav-cta nav-cta-secondary" onclick="openJoinRewards()"><span class="nav-cta-full">Join Rewards</span><span class="nav-cta-short">Join</span></button>
+      <button class="nav-cta" onclick="startMenuFlow('nav')"><span class="nav-cta-full">Browse Menu</span><span class="nav-cta-short">Menu</span></button>
+      <button class="nav-cta nav-cta-secondary" onclick="scrollToVisit()"><span class="nav-cta-full">Hours &amp; Location</span><span class="nav-cta-short">Visit</span></button>
+    </div>
+  </nav>
+
+  <!-- SCROLLING BRAND STRIP -->
+  <div class="brand-strip" aria-label="Brands we carry">
+    <div class="brand-track">
+      <div class="brand-item">
+        <span class="brand-prefix">Now Carrying</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">Sweetleaves</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">RYTHM</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">Lakeside Co.</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">Nebula</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">Grasslandz</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">WYLD</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">30+ Minnesota Brands</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+      </div>
+      <div class="brand-item" aria-hidden="true">
+        <span class="brand-prefix">Now Carrying</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">Sweetleaves</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">RYTHM</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">Lakeside Co.</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">Nebula</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">Grasslandz</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">WYLD</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-name">30+ Minnesota Brands</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-content">
+        <img class="award-badge" src="assets/award-badge.png" alt="2026 Mpls St Paul Best Of Gold Award Winner">
+        <div class="hero-eyebrow">North Loop · Minneapolis, MN</div>
+        <div class="hero-logo">
+          <img src="assets/logo-forest.png" alt="Sweetleaves" style="height:48px;width:auto;display:block">
+        </div>
+        <h1 class="hero-sublabel">Reserve ahead. Earn rewards <span class="nowrap">every visit.</span></h1>
+        <p class="hero-tagline">Open daily in the North Loop. Join the free Garden Club for points and member perks, then browse the menu for easy in-store or curbside pickup.</p>
+        <div class="hero-actions">
+          <button class="btn-primary" onclick="openJoinRewards()">Join Garden Club</button>
+          <button class="btn-primary btn-secondary" onclick="startMenuFlow('hero')">Browse Menu</button>
+        </div>
+        <div class="hero-proof" aria-label="Sweetleaves visit details">
+          <div class="hero-proof-item">
+            <span class="hero-proof-kicker">Free</span>
+            <span class="hero-proof-copy">Rewards signup with points on every visit.</span>
+          </div>
+          <div class="hero-proof-item">
+            <span class="hero-proof-kicker">Fast</span>
+            <span class="hero-proof-copy">Reserve online for local pickup.</span>
+          </div>
+          <div class="hero-proof-item">
+            <span class="hero-proof-kicker">Local</span>
+            <span class="hero-proof-copy">905 N Washington Ave.</span>
+          </div>
+        </div>
+        <p class="compliance-note">Product availability, reservations, and rewards are subject to applicable Minnesota regulations.</p>
+      </div>
+    </div>
+    <div class="hero-right">
+      <img class="hero-img" src="assets/hero.jpg" alt="Sweetleaves North Loop interior">
+    </div>
+  </section>
+
+  <section class="section-quick" aria-label="Primary actions">
+    <div class="quick-inner">
+      <div class="quick-panel quick-panel-featured">
+        <div>
+          <div class="quick-eyebrow">Best first step</div>
+          <div class="quick-title">Join Garden Club before you order.</div>
+          <p class="quick-copy">It is free, takes a moment, and keeps points tied to your phone number or email at checkout.</p>
+        </div>
+        <button class="quick-button" onclick="openJoinRewards()">Join Free</button>
+      </div>
+      <div class="quick-panel">
+        <div>
+          <div class="quick-eyebrow">Ready now</div>
+          <div class="quick-title">Browse the pickup menu.</div>
+          <p class="quick-copy">Verify your age, reserve online, then choose in-store or curbside pickup at the North Loop shop.</p>
+        </div>
+        <button class="quick-button alt" onclick="startMenuFlow('quick_panel')">Browse Menu</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-club" id="garden-club">
+    <div class="club-inner">
+      <div class="club-pill">
+        <img class="club-pill-gardenclub" src="assets/garden-club-text.png" alt="Garden Club">
+        <h2 class="club-pill-h2">Loyalty Perks &amp; Points</h2>
+        <p class="club-pill-copy">Garden Club turns each eligible visit into points, member updates, and local perks. Sign up first, then keep shopping with the same phone number or email.</p>
+        <div class="club-actions">
+          <button class="club-cta" onclick="openJoinRewards()">Sign Up Free</button>
+          <button class="club-cta club-cta-secondary" onclick="startMenuFlow('garden_club')">Browse Menu</button>
+        </div>
+      </div>
+
+      <div class="club-summary">
+        <div class="club-points">
+          <div class="club-point">
+            <strong>$1 = 1 point</strong>
+            <span>Use your phone number or email at checkout.</span>
+          </div>
+          <div class="club-point">
+            <strong>Redeem rewards</strong>
+            <span>100 points = $3 off. 75 points = $5 off a Sweetleaves treat.</span>
+          </div>
+        </div>
+        <div class="club-perks-compact" aria-label="Garden Club perks">
+          <span>Double Points Days</span>
+          <span>Birthday Reward</span>
+          <span>Early Access</span>
+          <span>Quarterly Giveaways</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-how">
+    <div class="how-grid">
+      <div class="how-step">
+        <div class="how-num">Step 01</div>
+        <div class="how-title">Join Rewards</div>
+        <div class="how-body">Create your free Garden Club account so eligible visits can earn points.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">Step 02</div>
+        <div class="how-title">Browse &amp; Reserve</div>
+        <div class="how-body">Verify your age, view the live menu, and reserve ahead from any device.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">Step 03</div>
+        <div class="how-title">Easy Pickup</div>
+        <div class="how-body">Visit North Loop for a seamless, professional pickup experience.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-location" id="location-section">
+    <div class="section-location-inner">
+    <div class="location-grid">
+      <div class="loc-col">
+        <div class="loc-eyebrow">Visit Us</div>
+        <div class="loc-title">905 N Washington Ave</div>
+        <div class="loc-body">Minneapolis, MN 55401</div>
+      </div>
+      <div class="loc-col">
+        <div class="loc-eyebrow">Store Hours</div>
+        <div class="hours-row"><span>Monday</span><span>10am – 9pm</span></div>
+        <div class="hours-row"><span>Tuesday</span><span>10am – 9pm</span></div>
+        <div class="hours-row"><span>Wednesday</span><span>10am – 9pm</span></div>
+        <div class="hours-row"><span>Thursday</span><span>10am – 10pm</span></div>
+        <div class="hours-row"><span>Friday</span><span>10am – 10pm</span></div>
+        <div class="hours-row"><span>Saturday</span><span>9am – 10pm</span></div>
+        <div class="hours-row"><span>Sunday</span><span>11am – 6pm</span></div>
+      </div>
+      <div class="loc-col">
+        <div class="loc-eyebrow">Contact</div>
+        <div class="loc-title"><a href="tel:612-688-9333" onclick="SLTrack.markPhoneClick()">612-688-9333</a></div>
+        <div class="loc-body">info@sweetleavesmn.com</div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 Sweetleaves. All rights reserved.</p>
+  </footer>
+
+  <div class="sticky-conversion" aria-label="Quick actions">
+    <button class="sticky-join" onclick="openJoinRewards()">Join Rewards</button>
+    <button class="sticky-shop" onclick="startMenuFlow('sticky')">Browse Menu</button>
+  </div>
+</div>
+
+<div id="page-agegate" class="page">
+  <div class="ag-card">
+    <img class="ag-badge" src="assets/award-badge-light.png" alt="2026 Mpls St Paul Best Of Gold Award Winner">
+
+    <!-- Step 1: 21+ verification -->
+    <div id="ag-step-verify" class="ag-step active">
+      <div class="ag-club-blurb">
+        <div class="ag-club-blurb-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="ag-club-blurb-text">
+          <strong>Garden Club Members</strong>
+          Earn points on every visit. Free to join after you verify.
+        </div>
+      </div>
+      <div class="ag-h1">Are you 21+ years of age?</div>
+      <p class="ag-desc">You must be of legal age to view our premium collections and visit our North Loop location.</p>
+      <div class="ag-btns">
+        <button class="ag-yes" onclick="passAgeAndShowRewards()">Yes, I am 21+</button>
+        <button class="ag-no" onclick="document.getElementById(&#39;ag-denied&#39;).style.display=&#39;block&#39;">No, I am under 21</button>
+      </div>
+      <p id="ag-denied" class="ag-denied">Access denied. You must be 21 or older.</p>
+    </div>
+
+    <!-- Step 2: rewards offer (shown after 21+ confirmed) -->
+    <div id="ag-step-rewards" class="ag-step">
+      <div class="ag-h1">Join Garden Club before you browse.</div>
+      <p class="ag-desc">Sign up free to earn points on eligible purchases and unlock member perks, or continue straight to the pickup menu.</p>
+      <div class="ag-btns">
+        <button class="ag-yes" onclick="openJoinRewards()">Join Free &amp; Earn Points</button>
+        <button class="ag-secondary" onclick="proceedToMenu()">Skip to Menu</button>
+      </div>
+      <p class="ag-fineprint">Garden Club is free to join. Message and data rates may apply. Valid ID required at pickup.</p>
+    </div>
+  </div>
+</div>
+
+<!-- AIQ Garden Club signup — iframe directly to AIQ's hosted form,
+     bypasses the pixel script's URL targeting check. -->
+<div id="aiq-modal" class="aiq-modal" role="dialog" aria-modal="true" aria-label="Garden Club Sign Up" onclick="if(event.target===this) closeAiqModal()">
+  <div class="aiq-modal-inner">
+    <button class="aiq-modal-close" onclick="closeAiqModal()" aria-label="Close">×</button>
+    <div class="aiq-loading">Loading sign-up form…</div>
+    <iframe id="aiq-iframe" title="Garden Club Sign Up" src="about:blank"></iframe>
+  </div>
+</div>
+
+<div id="page-menu" class="page">
+  <nav class="menu-nav">
+    <img src="assets/logo.png" alt="Sweetleaves" style="height:22px;width:auto;display:block">
+    <button class="menu-back" onclick="goTo(&#39;page-landing&#39;)">Back</button>
+  </nav>
+  <div id="dutchie-embed-container" class="menu-embed"></div>
+</div>
+
+<script>
+function goTo(pageId) {
+  document.querySelectorAll(".page").forEach(function(p) { p.classList.remove("active"); });
+  document.getElementById(pageId).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function startMenuFlow(source) {
+  if (window.SLTrack) SLTrack.track("menu_cta_click", { variant: "rewards", source: source || "unknown" });
+  goTo("page-agegate");
+}
+
+// "Yes, I am 21+" on the rewards variant doesn't go straight to the menu —
+// it reveals a second age-gate step offering the rewards signup or skip.
+function passAgeAndShowRewards() {
+  if (window.SLTrack) SLTrack.markAgeGatePass();
+  document.getElementById("ag-step-verify").classList.remove("active");
+  document.getElementById("ag-step-rewards").classList.add("active");
+  if (window.SLTrack) SLTrack.track("rewards_offer_shown", { variant: "rewards" });
+}
+
+// Retained for parity with control's API surface, in case anything calls it.
+function verifyAge() {
+  passAgeAndShowRewards();
+}
+
+function scrollToVisit() {
+  document.getElementById("location-section").scrollIntoView({ behavior: "smooth" });
+}
+
+function loadDutchie() {
+  var container = document.getElementById("dutchie-embed-container");
+  if (container.querySelector("script")) return;
+  var script = document.createElement("script");
+  script.id = "dutchie--embed__script";
+  script.src = SLTrack.buildEmbedUrl();
+  script.async = true;
+  container.appendChild(script);
+}
+
+function proceedToMenu() {
+  if (window.SLTrack) SLTrack.track("rewards_skip_to_menu", { variant: "rewards" });
+  goTo("page-menu");
+  loadDutchie();
+}
+
+// --- Alpine IQ Garden Club signup (direct iframe approach) ---
+//
+// The AIQ pixel script enforces a URL-targeting rule on form 3585
+// (includeURLs: "www.sweetleavesmn.com"), which silently blocks the popup
+// anywhere else (Netlify preview, localhost, etc.). We bypass that gate by
+// loading AIQ's hosted form URL directly into our own iframe. The form
+// itself still submits to AIQ's backend exactly the same way.
+var AIQ_FORM_URL = "https://lab.alpineiq.com/join/c/3585/111757?popupForm=true";
+
+function buildAiqFormUrl() {
+  var params = {};
+  if (window.SLTrack && SLTrack.attributionParams) {
+    params = SLTrack.attributionParams();
+  }
+  params.sl_source_page = "rewards";
+  params.sl_conversion_intent = "garden_club_signup";
+  if (window.SLTrack && SLTrack.queryString) {
+    return AIQ_FORM_URL + "&" + SLTrack.queryString(params);
+  }
+  return AIQ_FORM_URL;
+}
+
+function openJoinRewards() {
+  if (window.SLTrack) SLTrack.track("rewards_join_open", { variant: "rewards" });
+  var modal = document.getElementById("aiq-modal");
+  var iframe = document.getElementById("aiq-iframe");
+  if (iframe.src === "about:blank" || !iframe.src) {
+    iframe.src = buildAiqFormUrl();
+    iframe.addEventListener("load", function() {
+      modal.classList.add("loaded");
+    }, { once: true });
+  }
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeAiqModal() {
+  var modal = document.getElementById("aiq-modal");
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+  if (window.SLTrack) SLTrack.track("rewards_join_close", { variant: "rewards" });
+}
+
+// Listen for AIQ form-submitted postMessage. AIQ's form iframe posts a
+// "form-submitted" message on successful signup; we use that to attribute
+// the conversion to this A/B variant, then send the user on to the menu.
+window.addEventListener("message", function(e) {
+  if (!e.origin || !e.origin.includes("alpineiq.com")) return;
+  var data = e.data;
+  var type = "";
+  if (typeof data === "string") type = data;
+  else if (data && typeof data === "object") type = (data.type || data.event || "").toString();
+  type = type.toLowerCase();
+  if (!type) return;
+  if (/submit|signup|complete|success|form-submitted/.test(type)) {
+    if (window.SLTrack) SLTrack.track("rewards_signup_complete", {
+      variant: "rewards", aiq_type: type
+    });
+    // Give the iframe a moment to show its confirmation, then move on.
+    setTimeout(function() {
+      closeAiqModal();
+      proceedToMenu();
+    }, 1500);
+  }
+});
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") {
+    var modal = document.getElementById("aiq-modal");
+    if (modal && modal.classList.contains("active")) closeAiqModal();
+  }
+});
+</script>
+
+
+
+<script async id="netlify-rum-container" src="/.netlify/scripts/rum" data-netlify-rum-site-id="3fe723f6-7511-4849-8966-a6aaaa8505f7" data-netlify-deploy-branch="" data-netlify-deploy-context="production" data-netlify-cwv-token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzaXRlX2lkIjoiM2ZlNzIzZjYtNzUxMS00ODQ5LTg5NjYtYTZhYWFhODUwNWY3IiwiYWNjb3VudF9pZCI6IjY5YmMwOTUzOTFhMGM0MTdjYzk3YTRhMyIsImRlcGxveV9pZCI6IjZhMzQ1NzE0NjYzYzNjMDVmNmY1YmY4ZSIsImlzc3VlciI6Im5mc2VydmVyIn0.fdW6dLkN-8UYCxDaJhxxoB_fguxnLJ98O49x9rA4yOk"></script></body></html>
